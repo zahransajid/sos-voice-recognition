@@ -36,7 +36,8 @@ def get_closest_match(phrase, phrase_list, threshold=80, boost_score=20):
     return best_match[0]
 
 # Example
-input_phrase = "i need the doctor"
+if __name__ == '__main__':
+    input_phrase = "i need the doctor"
 
-closest_match = get_closest_match(input_phrase, predefined_phrases)
-print(f"Closest match: {closest_match}")
+    closest_match = get_closest_match(input_phrase, predefined_phrases)
+    print(f"Closest match: {closest_match}")

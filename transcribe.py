@@ -1,7 +1,7 @@
 import vosk
 import pyaudio
 import json
-
+from close2 import predefined_phrases,get_closest_match
 
 # Here I have downloaded this model to my PC, extracted the files 
 # and saved it in local directory
@@ -28,23 +28,25 @@ stream = p.open(format=pyaudio.paInt16,
 
 output_file_path = "./transcripts/recognized_text.txt"
 
-with open(output_file_path, "w") as output_file:
-    print("Listening for speech. Say 'Terminate' to stop.")
-    while True:
-        data = stream.read(4096)#read in chunks of 4096 bytes
-        if rec.AcceptWaveform(data):#accept waveform of input voice
-            # Parse the JSON result and get the recognized text
-            result = json.loads(rec.Result())
-            recognized_text = result['text']
-            
-            # Write recognized text to the file
+print("Listening for speech. Say 'Terminate' to stop.")
+while True:
+    data = stream.read(4096)#read in chunks of 4096 bytes
+    if rec.AcceptWaveform(data):#accept waveform of input voice
+        # Parse the JSON result and get the recognized text
+        result = json.loads(rec.Result())
+        recognized_text = result['text']
+        
+        closest_match, score = get_closest_match(recognized_text, predefined_phrases)
+        # Write recognized text to the file
+        with open(output_file_path, "a") as output_file:
             output_file.write(recognized_text + "\n")
-            print(recognized_text)
-            
-            # Check for the termination keyword
-            if "terminate" in recognized_text.lower():
-                print("Termination keyword detected. Stopping...")
-                break
+        print(recognized_text)
+        
+        print(f"Closest match is {closest_match} with score {score}")
+        # Check for the termination keyword
+        if "terminate" in recognized_text.lower():
+            print("Termination keyword detected. Stopping...")
+            break
 # Stop and close the stream
 stream.stop_stream()
 stream.close()
