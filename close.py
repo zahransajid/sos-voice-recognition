@@ -33,7 +33,7 @@ def get_closest_match(phrase, phrase_list, threshold=80, boost_score=20):
         boosted_matches.append((predefined_phrase, score))
 
     best_match = max(boosted_matches, key=lambda x: x[1])
-    return best_match[0]
+    return best_match
 
 # Example
 if __name__ == '__main__':

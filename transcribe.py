@@ -1,7 +1,8 @@
 import vosk
 import pyaudio
 import json
-from close2 import predefined_phrases,get_closest_match
+import os
+from close import predefined_phrases,get_closest_match
 
 # Here I have downloaded this model to my PC, extracted the files 
 # and saved it in local directory
@@ -17,6 +18,13 @@ model = vosk.Model(model_path)
 #US-English
 #model = vosk.Model(lang="en-us")
 
+def draw_ui(recognised_text, match_text, score, threshold=100):
+    os.system('cls')
+    print(f"\tRecognised text:\n\t{recognised_text}")
+    if(score > threshold):
+        print(f"\tMatched phrase: {match_text}")
+        print(f"\tMatched score: {score}")
+
 rec = vosk.KaldiRecognizer(model, 16000)
 
 p = pyaudio.PyAudio()
@@ -27,7 +35,7 @@ stream = p.open(format=pyaudio.paInt16,
                 frames_per_buffer=8192)
 
 output_file_path = "./transcripts/recognized_text.txt"
-
+os.system('cls')
 print("Listening for speech. Say 'Terminate' to stop.")
 while True:
     data = stream.read(4096)#read in chunks of 4096 bytes
@@ -36,14 +44,14 @@ while True:
         result = json.loads(rec.Result())
         recognized_text = result['text']
         
-        closest_match, score = get_closest_match(recognized_text, predefined_phrases)
         # Write recognized text to the file
         with open(output_file_path, "a") as output_file:
             output_file.write(recognized_text + "\n")
-        print(recognized_text)
+        if(recognized_text != ""):
+            closest_match, score = get_closest_match(recognized_text, predefined_phrases)
+            draw_ui(recognized_text,closest_match, score)
         
-        print(f"Closest match is {closest_match} with score {score}")
-        # Check for the termination keyword
+        
         if "terminate" in recognized_text.lower():
             print("Termination keyword detected. Stopping...")
             break
