@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SOS frontend</title>
+    <script>
+      
+      let mediaRecorder;
+      var ws = new WebSocket("ws://localhost:8000/ws");
+      var message_len = 0;
+      var chunks = [];
+
+      async function audioStream() {
+        try {
+          const constraints = {
+            audio: {
+              sampleRate: 16000,
+              channelCount: 1,
+            },
+          };
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          mediaRecorder = new MediaRecorder(stream,{mimeType: 'audio/webm',});
+
+          mediaRecorder.start(1000);
+
+          const handleDataAvailable = (e) => {
+            console.log("Adding data")
+            chunks.push(e.data);
+            message_len += 1
+            if (message_len%3 == 0) {
+                let blob = new Blob(chunks, {type: 'audio/webm'});
+                ws.send(blob)
+                chunks = [];
+            }
+          };
+
+          ws.onmessage = function(event) {
+            var messages = document.getElementById('messages')
+            messages.textContent = event.data
+        };
+
+          mediaRecorder.ondataavailable = handleDataAvailable;
+
+          mediaRecorder.onstop = () => {
+            console.log("Recording stopped");
+          };
+        } catch (error) {
+          console.error("Error accessing microphone:", error);
+        }
+      }
+
+      function doneSpeaking() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop(); // Stop the recording
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <button id="record" onclick="audioStream()">Record</button>
+    <button id="stop_rec" onclick="doneSpeaking()">Stop recording</button>
+    <p id="messages"></p>
+  </body>
+</html>
